@@ -446,3 +446,25 @@ function i18n_field_type_info($type = NULL, $property = NULL) {
     return $info;
   }
 }
+
+/**
+ * Implements hook_field_info_alter().
+ */
+function i18n_field_field_info_alter(&$field_info) {
+  foreach(array_keys($field_info) as $type) {
+    $field_info[$type]['property_callbacks'][] = 'i18n_field_entity_property_callback';
+  }
+}
+
+/**
+ * Callback to translate entity property info for a fields.
+ *
+ * @see entity_metadata_field_entity_property_info()
+ * @see entity_metadata_field_default_property_callback()
+ */
+function i18n_field_entity_property_callback(&$info, $entity_type, $field, $instance, $field_type) {
+  global $language;
+  $name = $field['field_name'];
+  $property = &$info[$entity_type]['bundles'][$instance['bundle']]['properties'][$name];
+  $property['label'] = i18n_field_translate_property($instance, 'label', $language->language);
+}
