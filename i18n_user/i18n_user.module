@@ -12,6 +12,9 @@ function i18n_user_mail_alter(&$message) {
     $user_preferred = language_default();
     if (isset($message['params']['account'])) {
       $user_preferred = user_preferred_language($message['params']['account']);
+      if (!isset($user_preferred)) {
+        $user_preferred = language_default();
+      }
     }
     $language = (isset($message['language']) ? $message['language'] : $user_preferred);
     $variables = array('user' => $message['params']['account']);
