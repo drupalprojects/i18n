@@ -120,9 +120,6 @@ function i18n_node_translation_link($text, $path, $langcode, $options = array())
     $options += $links->links[$langcode];
     $path = $links->links[$langcode]['href'];
   }
-  $languages = language_list();
-  $language = $languages[$langcode];
-  $options += array('language' => $language);
   return l($text, $path, $options);
 }
 
