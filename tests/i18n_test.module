@@ -92,10 +92,10 @@ function i18n_test_menu() {
 }
 
 class i18n_string_textgroup_cached_logged extends i18n_string_textgroup_cached {
-  public static function load_translation($i18nstring, $langcode) {
+  public static function load_translation($i18nstring) {
     $strings = variable_get('i18n_loaded_translations', array());
     $strings[$i18nstring->get_name()] = true;
     variable_set('i18n_loaded_translations', $strings);
-    parent::load_translation($i18nstring, $langcode);
+    parent::load_translations($i18nstring);
   }
 }

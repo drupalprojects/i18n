@@ -167,16 +167,15 @@ class i18n_string_object {
    */
   public function get_translation($langcode) {
     if (!isset($this->translations[$langcode])) {
-      $translation = $this->textgroup()->load_translation($this, $langcode);
-      if ($translation && isset($translation->translation)) {
-        $this->set_translation($translation, $langcode);
-      }
-      else {
-        // No source, no translation
-        $this->translations[$langcode] = FALSE;
+      $translations = $this->textgroup()->load_translations($this);
+      $this->translations[$langcode] = FALSE;
+      foreach($translations as $translation) {
+        if (isset($translation->translation) && $translation->language == $langcode) {
+          $this->set_translation($translation, $langcode);
+        }
       }
     }
-    // Which doesn't mean we've got a translation, only that we've got the result cached
+
     return $this->translations[$langcode];
   }
   /**
@@ -662,30 +661,38 @@ class i18n_string_textgroup_default {
   }
 
   /**
-   * Load translation from db
+   * Load translations from db
    *
-   * @todo Optimize when we've already got the source string
+   * @param $i18nstring
+   * @return object
    */
-  public static function load_translation($i18nstring, $langcode) {
-    // Search the database using lid if we've got it or textgroup, context otherwise
-    if (!empty($i18nstring->lid)) {
-      // We've already got lid, we just need translation data
-      $query = db_select('locales_target', 't');
-      $query->condition('t.lid', $i18nstring->lid);
+  public static function load_translations($i18nstring) {
+    $cid = $i18nstring->get_cid();
+
+    if ($cached = cache_get($cid, 'cache')) {
+      return $cached->data;
+    } else{
+      // Search the database using lid if we've got it or textgroup, context otherwise
+      if (!empty($i18nstring->lid)) {
+        // We've already got lid, we just need translation data
+        $query = db_select('locales_target', 't');
+        $query->condition('t.lid', $i18nstring->lid);
+      }
+      else {
+        // Still don't have lid, load string properties too
+        $query = db_select('i18n_string', 's')->fields('s');
+        $query->leftJoin('locales_target', 't', 's.lid = t.lid');
+        $query->condition('s.textgroup', $i18nstring->textgroup);
+        $query->condition('s.context', $i18nstring->context);
+      }
+      // Add translation fields
+      $query->fields('t', array('translation', 'i18n_status', 'language'));
+      $translations = $query->execute()->fetchAll();
+      // Cache all the translations for the given string, to avoid creating
+      // one cache entry per string per language
+      cache_set($cid, $translations, 'cache');
+      return $translations;
     }
-    else {
-      // Still don't have lid, load string properties too
-      $query = db_select('i18n_string', 's')->fields('s');
-      $query->leftJoin('locales_target', 't', 's.lid = t.lid');
-      $query->condition('s.textgroup', $i18nstring->textgroup);
-      $query->condition('s.context', $i18nstring->context);
-    }
-    // Add translation fields
-    $query->fields('t', array('translation', 'i18n_status'));
-    $query->condition('t.language', $langcode);
-    // Speed up the query, we just need one row
-    $query->range(0, 1);
-    return $query->execute()->fetchObject();
   }
 
   /**
@@ -1082,6 +1089,7 @@ class i18n_string_textgroup_default {
     if ($source = $i18nstring->get_source()) {
       $source->set_translation($translation, $langcode);
       $this->save_translation($source, $langcode);
+      $i18nstring->cache_reset();
       return $source;
     }
   }
