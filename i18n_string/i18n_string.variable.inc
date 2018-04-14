@@ -96,7 +96,7 @@ function i18n_string_variable_textgroup_list() {
 function i18n_string_variable_textgroup_class_list($variable, $options = array()) {
   return array(
     'i18n_string_textgroup_default' => t('Text group handler default.', array(), $options),
-    'i18n_string_textgroup_cached' => t('Text group handler which included persistent caching.', array(), $options),
+    'i18n_string_textgroup_cached' => t('Text group handler which include persistent caching.', array(), $options),
   );
 }
 
