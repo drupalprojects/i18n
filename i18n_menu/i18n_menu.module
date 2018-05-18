@@ -522,7 +522,7 @@ function _i18n_menu_link_localize(&$link, $langcode = NULL) {
 function _i18n_menu_link_description($link, $langcode = NULL) {
   if (!empty($link['options']['attributes']['title'])) {
     $key = i18n_object_info('menu_link', 'key');
-    return i18n_string_translate(array('menu', 'item', $link[$key], 'description'), $link['options']['attributes']['title'], array('langcode' => $langcode));
+    return i18n_string_translate(array('menu', 'item', $link[$key], 'description'), $link['options']['attributes']['title'], array('langcode' => $langcode, 'sanitize' => FALSE));
   }
   else {
     return NULL;
